@@ -1,0 +1,63 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<title>Document</title>
+	<link rel="stylesheet" href="../assets/css/main.css" />
+</head>
+<body>
+	
+
+<div id="tableCon">
+	
+</div>
+
+
+
+<script type="text/javascript" src="../src/jquery-2.1.4.min.js"></script>
+<script type="text/javascript" src="../src/utilHelper.js"></script>
+<script type="text/javascript" src="../src/paginate.js"></script>
+<script type="text/javascript">
+	/**
+		// 上一页 ，下一页文本
+		btns: ['上一页', '下一页'],
+		// 总页数
+		totalPage: 10,
+		// 默认选中的页数
+		currentPage: 1,
+		// 当前页的最大紧邻前置页数（不包括最前面的显示页数）
+		preposePagesCount: 2,
+		// 当前页的最大紧邻后置页数
+		postposePagesCount: 3,
+		// 第一个"..."前显示的页数
+		firstPagesCount: 2,
+		// 第二个"..."后显示的页数
+		lastPagesCount: 2
+	 */
+	var paginate = new Paginate({
+		btns: ['《', '》'],
+		totalPage: 6,
+		currentPage: 2
+	});
+
+	// 填写错误数据跳转， 执行错误回调函数
+	paginate.on('errorSwitch', function(obj){
+        console.log(obj);
+        if(obj.page === ''){
+            alert('不能为空');
+        }else{
+            alert('页码不正确');
+        }
+    });
+
+    // 页面切换的时候，执行的函数(有两个参数)
+    // o {Object} --currentPage 
+    // next 调用执行翻页操作。
+    paginate.on('switch', function(obj, next) {
+    	console.log(obj);
+    	next();
+    });
+	$('#tableCon').html(paginate.El);
+</script>
+</body>
+</html>

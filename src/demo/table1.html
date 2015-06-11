@@ -1,0 +1,149 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<title>Document</title>
+	<link rel="stylesheet" href="../skins/k-table.css" />
+</head>
+<body>
+	
+
+<div class="table-c" id="tableC">
+	<table class="k-table">
+		<thead>
+			<tr>
+				<th>序号</th>
+				<th>日期<div class="order-c"><i class="order-as" title="升序"></i><i class="order-des" title="降序"></i></div></th>
+				<th>活动名称</th>
+				<th>费用类型</th>
+				<th>金额（元）</th>
+				<th>付款人<i>（报名人姓名）</i></th>
+				<th>电话</th><th>状态</th>
+			</tr>
+		</thead>
+		<tbody style="">
+		</tbody>
+	</table>	
+</div>
+
+<div id="tablecT">
+	<table class="k-table">
+		<thead>
+			<tr>
+				<th>序号</th>
+				<th>日期<div class="order-c"><i class="order-as" title="升序"></i><i class="order-des" title="降序"></i></div></th>
+				<th>活动名称</th>
+				<th>费用类型</th>
+				<th>金额（元）</th>
+				<th>付款人<i>（报名人姓名）</i></th>
+				<th>电话</th><th>状态</th>
+			</tr>
+		</thead>
+		<tbody style="">
+		</tbody>
+	</table>
+</div>
+
+
+
+<script type="text/javascript" src="../jquery-2.1.4.min.js"></script>
+<script type="text/javascript" src="../utilHelper.js"></script>
+<script type="text/javascript" src="../k-paginate.js"></script>
+<script type="text/javascript" src="../k-table.js"></script>
+<script type="text/javascript">
+	var table = new Table({
+		el: 'tableC',
+		events: {
+				'click #delete': 'remove',
+				'click #name': 'getName'
+			},
+		eventsHandler: {
+			remove: function(e, row) {
+				row.destroy();
+			},
+			getName: function(e, row) {
+				alert(row.data.username);
+			}
+		},
+		perNums: 5,
+		source: [	{id:1,	name: 3,time: '2012/12/12 12:00:00',username: '张三1',group: 'A',infro: '自定义信息'},
+					{id:2,	name: 2,time: '2012/12/12 12:00:00',username: '张三2',group: 'A',infro: '自定义信息'},
+					{id:3,	name: 4,time: '2012/12/12 12:00:00',username: '张三3',group: 'A',infro: '自定义信息'},
+					{id:4,	name: 1,time: '2012/12/12 12:00:00',username: '张三4',group: 'A',infro: '自定义信息'},
+					{id:5,	name: 5,time: '2012/12/12 12:00:00',username: '张三5',group: 'A',infro: '自定义信息'},
+					{id:1,	name: 3,time: '2012/12/12 12:00:00',username: '张三6',group: 'A',infro: '自定义信息'},
+					{id:2,	name: 2,time: '2012/12/12 12:00:00',username: '张三7',group: 'A',infro: '自定义信息'},
+					{id:3,	name: 4,time: '2012/12/12 12:00:00',username: '张三8',group: 'A',infro: '自定义信息'}
+				],
+		columnNameList: ['index', 'name', 'time','name', 'time','name', 'username', function(data){
+			return '<a href="javascript:;" id="delete">删除</a>' + '<a href="javascript:;" id="name">姓名</a>';
+		}]
+	});
+
+	var table1 = new Table({
+		el: 'tablecT',
+		events: {
+				'click #delete': 'remove',
+				'click #name': 'getName'
+			},
+		eventsHandler: {
+			remove: function(e, row) {
+				row.destroy();
+			},
+			getName: function(e, row) {
+				alert(row.data.username);
+			}
+		},
+		perNums: 10,
+		skin: 'my-table-c',
+		source: function(o, ptable, options) { console.log(options); 
+			var resp = {
+				code: 0,
+				body: {
+					members: [{id:1,	name: 3,time: '2012/12/12 12:00:00',username: '张三1',group: 'A',infro: '自定义信息'},
+					{id:2,	name: 2,time: '2012/12/12 12:00:00',username: '张三2',group: 'A',infro: '自定义信息'},
+					{id:3,	name: 4,time: '2012/12/12 12:00:00',username: '张三3',group: 'A',infro: '自定义信息'},
+					{id:4,	name: 1,time: '2012/12/12 12:00:00',username: '张三4',group: 'A',infro: '自定义信息'},
+					{id:5,	name: 5,time: '2012/12/12 12:00:00',username: '张三5',group: 'A',infro: '自定义信息'},
+					{id:1,	name: 3,time: '2012/12/12 12:00:00',username: '张三1',group: 'A',infro: '自定义信息'},
+					{id:2,	name: 2,time: '2012/12/12 12:00:00',username: '张三2',group: 'A',infro: '自定义信息'},
+					{id:3,	name: 4,time: '2012/12/12 12:00:00',username: '张三3',group: 'A',infro: '自定义信息'},
+					{id:4,	name: 1,time: '2012/12/12 12:00:00',username: '张三4',group: 'A',infro: '自定义信息'},
+					{id:5,	name: 5,time: '2012/12/12 12:00:00',username: '张三5',group: 'A',infro: '自定义信息'}],
+					total_num: 40
+				}
+			};
+			if (options && options.key == 'name') {
+				var resp = {
+					code: 0,
+					body: {
+						members: [{id:1,	name: 3,time: '2012/12/12 12:00:00',username: '2张三1',group: 'A',infro: '自定义信息'},
+						{id:2,	name: 2,time: '2012/12/12 12:00:00',username: '2张三2',group: 'A',infro: '自定义信息'},
+						{id:3,	name: 4,time: '2012/12/12 12:00:00',username: '2张三3',group: 'A',infro: '自定义信息'},
+						{id:4,	name: 1,time: '2012/12/12 12:00:00',username: '2张三4',group: 'A',infro: '自定义信息'},
+						{id:5,	name: 5,time: '2012/12/12 12:00:00',username: '2张三5',group: 'A',infro: '自定义信息'}],
+						total_num: 12
+					}
+				};
+			}
+			if (resp.code == 0) {
+				if (resp.body.members.length) {
+					setTimeout(function(){
+						ptable({totalPage: Math.ceil(resp.body.total_num/5), datas: resp.body.members});
+					}, 600);
+				}
+			}
+		},
+		columnNameList: ['index', 'name', 'time','name', 'time','name', 'username', function(data){
+			return '<a href="javascript:;" id="delete">删除</a>' + '<a href="javascript:;" id="name">姓名</a>';
+		}]
+	});
+
+	table1.on('errorSwitch', function(o) {
+		console.log(o);
+	})
+
+
+</script>
+</body>
+</html>
