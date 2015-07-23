@@ -10,19 +10,19 @@
 		constructor: Paginate,
 		initialize: function(config){
 			var DefaultOptions = {
-				// 上一页 ，下一页文本.
+				// the text of next page or previous page
 				btns: ['上一页', '下一页'],
-				// 总页数
+				// total page
 				totalPage: 10,
-				// 默认选中的页数
+				// default page 
 				currentPage: 1,
-				// 当前页的最大紧邻前置页数（不包括最前面的显示页数）
+				// max page's num before current page
 				preposePagesCount: 2,
-				// 当前页的最大紧邻后置页数
+				// max page's num after current page
 				postposePagesCount: 3,
-				// 第一个"..."前显示的页数
+				// max page's num before first "..."
 				firstPagesCount: 2,
-				// 第二个"..."后显示的页数
+				// max page's num after second "..."
 				lastPagesCount: 2
 			};
 			this.El = $('<div id="page_bar" class="paginate">');
@@ -94,7 +94,6 @@
 				lastPagesCount = this.get('lastPagesCount') >= 0 ? this.get('lastPagesCount') : 0,
 				offset;
 
-			// currPage前的页码展示
 			var prevpage = currPage > 1 ? currPage - 1 : 1;
 			if (currPage <= 1) {
 				paginationInner += '<a class="page page-trigger page-trigger-prev page-trigger-disable">'+ this.getBtnsContent(0) +'</a>';				
@@ -119,10 +118,8 @@
 				}
 			}
 
-			// currPage的页码展示
 			paginationInner += '<a class="page cur" page='+ currPage +'>' + currPage + '</a>';
 
-			// currPage后的页码展示
 			if (currPage >= totalPage - lastPagesCount - postposePagesCount) {
 				offset = currPage + 1;
 				for(var i=currPage+1; i<=totalPage; i++) {
@@ -156,7 +153,6 @@
 		destory: function() {
 			var ele = this.El;
 			this.El.remove();
-			//this.undelegateEvents(ele);
 			setEvents.undelegate(ele);
 		},
 		_switchToPage: function(page) {
@@ -174,7 +170,6 @@
 				self.options.currentPage = page;
 				self._resetPagination();
 			}
-
 		}		
 	}
 

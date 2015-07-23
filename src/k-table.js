@@ -3,112 +3,157 @@
     var Observe = utilHelper.Observe;
     var BindEventsHelper = utilHelper.BindEventsHelper;
 
-    var TableRow = function(options, parentTable) {
-        this.parent = parentTable;
-        this.initialize(options);
-    }
-
-    TableRow.prototype = {
-        constructor: TableRow,
-        initialize: function(options) {
-            $.extend(this, options);
-            this.El = $('<tr></tr>');
-            this.render(this.data);
-            this.hasSetEvents = false;
-            this.status = true;
-        },
-        render: function(data) {
-            var columnNameList = this.columnNameList,
-                _this = this,
-                data = data || _this.data,
-                content = '',
-                El;
-
-            $.each(columnNameList, function(i, name) {
-                if (name == 'index') {
-                    var currentPage = _this.parent.currentPage,
-                        perNums = _this.parent.options.perNums;
-                    if (!currentPage || !perNums) {
-                        var index = _this.index + 1;
-                    } else {
-                        var index = (currentPage-1)*perNums + _this.index + 1;
-                    }
-                    content += _this.createColItem(index);
-                } else if ($.type(name) == 'string') {
-                    content += _this.createColItem(data[name]);
-                } else if ($.type(name) == 'function') {
-                    content += _this.createColItem(name.call(null, data));
-                } else if ($.type(name) == 'object') {
-                    content += _this.createColItem(data[name.name], name['class']);
-                }
-            });
-            this.setData(data);
-            this.El.html(content);
-            this.setClass();
-        },
-        createColItem: function(value, className) {
-            var classname = className ? 'class=' + className : ''; 
-            return '<td ' + classname + '>' + value + '</td>';
-        },
-        setEvents: function(events, eventHandleObj) {
-            if (events && !this.hasSetEvents) {
-                if ($.isEmptyObject(events) || $.isEmptyObject(eventHandleObj)) return;
-                BindEventsHelper.setEvents(events, eventHandleObj, this.El, null, this);
-                this.hasSetEvents = true;
-            }
-        },
-        setClass: function() {
-            var rowClass = this.rowClass,
-                type = $.type(rowClass),
-                index = this.index,
-                className;
-
-            if (type == 'string') {
-                className = rowClass;
-            } else if (type == 'function') {
-                className = rowClass.call(this, index);
-            }
-
-            this.El.removeClass().addClass(className);
-        },
-        set: function(dataObj) {
-            var _this = this;
-            $.each(dataObj, function(name, val){
-                _this.data[name] = val;
-            })
-        },
-        setIndex: function(index) {
-            this.index = index;
-        },
-        setData: function(data) {
-            this.data = data;
-        },
-        // default set top.
-        setLoc: function(index) {
-            var index = index || 0;
-            this.parent && this.parent.setWhichRow(this, index);
-        },
-        destroy: function() {
-            this.El.remove();
-            BindEventsHelper.undelegate(this.El);
-            this.parent && this.parent.destroyRow(this);
-        },
-        refresh: function(data) {
-            this.render(data);
-        }
-    }
-
-    Error = {
+    // simple error 
+    var Error = {
         sendTypeError: function(message) {
             return new ReferenceError(message);
         },
         sendError: function(message) {
             return new Error(message);
         },
-        sendReferenceError: function() {
+        sendReferenceError: function(message) {
             return new ReferenceError(message);
         }
     }
+
+    /**
+     * tableRow
+     * @params {Object}
+            - data {Object} the data of row
+            - columnNameList {Object} each column's render result in row
+            - rowClass: {String | Function} use the string or function's executive result as row's class
+            - index: {Number} the index of this row     
+     * @params {Object} Table's instance 
+     */
+    var TableRow = function(options, parentTable) {
+        this.parent = parentTable;
+        this.initialize(options);
+    }
+
+    TableRow.prototype.initialize = function(options) {
+        $.extend(this, options);
+        this.El = $('<tr></tr>');
+        this.render(this.data);
+        this.hasSetEvents = false;
+        this.initState();
+    }
+
+    // initialize state
+    // use state for being variable. when state is change, render the ui that relative to state
+    TableRow.prototype.initState = function() {
+        this.state = {
+            select: false
+        }
+    }
+
+    // render ui.
+    TableRow.prototype.render = function(data) {
+        var columnNameList = this.columnNameList,
+            _this = this,
+            data = data || _this.data,
+            content = '',
+            El;
+        $.each(columnNameList, function(i, name) {
+            if (name == 'index') {
+                var currentPage = _this.parent.currentPage,
+                    perNums = _this.parent.options.perNums;
+                if (!currentPage || !perNums) {
+                    var index = _this.index + 1;
+                } else {
+                    var index = (currentPage-1)*perNums + _this.index + 1;
+                }
+                content += _this.createColItem(index);
+            } else if ($.type(name) == 'string') {
+                content += _this.createColItem(data[name]);
+            } else if ($.type(name) == 'function') {
+                content += _this.createColItem(name.call(null, data));
+            } else if ($.type(name) == 'object') {
+                content += _this.createColItem(data[name.name], name['className']);
+            }
+        });
+        this.setData(data);
+        this.El.html(content);
+        this.setClass();
+    }
+
+    // render the ui that relative to state
+    TableRow.prototype.renderState = function() {
+        var checkboxSelect = this.El.find('input.rowSelect');
+        if (this.state.select) {
+            checkboxSelect.attr('checked', true);
+        } else {
+            checkboxSelect.attr('checked', false);
+        }
+    }
+
+    // get td's element
+    TableRow.prototype.createColItem = function(value, className) {
+        var classname = className ? 'class=' + className : ''; 
+        return '<td ' + classname + '>' + value + '</td>';
+    }
+
+    // delagate events to El
+    TableRow.prototype.setEvents = function(events, eventHandleObj) {
+        if (events && !this.hasSetEvents) {
+            if ($.isEmptyObject(events) || $.isEmptyObject(eventHandleObj)) return;
+            BindEventsHelper.setEvents(events, eventHandleObj, this.El, null, this);
+            this.hasSetEvents = true;
+        }
+    }
+
+    // set El's class by this.rowClass
+    TableRow.prototype.setClass = function() {
+        var rowClass = this.rowClass,
+            type = $.type(rowClass),
+            index = this.index,
+            className;
+
+        if (type == 'string') {
+            className = rowClass;
+        } else if (type == 'function') {
+            className = rowClass.call(this, index);
+        }
+
+        this.El.removeClass().addClass(className);
+    }
+
+    TableRow.prototype.setState = function(flag) {
+        this.state = {
+            select: flag
+        };
+        this.renderState();
+    }
+
+    // set index 
+    TableRow.prototype.setIndex = function(index) {
+        this.index = index;
+    }
+
+    TableRow.prototype.setData = function(data) {
+        if ($.type(data) != 'object') 
+            return Error.sendTypeError('data format is not correct');
+        this.data = $.extend(this.data, data);
+    }
+
+    // destroy the row
+    TableRow.prototype._destroy = function() {
+        // remove dom
+        this.El.remove();
+        // undelegate events
+        BindEventsHelper.undelegate(this.El);
+        //this.trigger('destroy');
+    }
+
+    TableRow.prototype.destroy = function() {
+        this.parent.destroyRow(this);
+    }
+
+    // refresh the row by data
+    TableRow.prototype.refresh = function(data) {
+        this.render(data);
+    }
+
+    utilHelper.Observe.make(TableRow.prototype);
 
     /**
      * Table
@@ -118,10 +163,10 @@
     Table = function(options) {
         var defaultOptions = {
             El: '',
-            paginate: true, //默认有翻页
+            paginate: true, //default is true
             paginateBtns: ['上一页', '下一页'],
-            events: {}, // 定义事件
-            eventsHandler: {}, // 事件执行句柄
+            events: {}, // events
+            eventsHandler: {}, // events handlers
             skin: '',
             rowClass: function(index) {
                 if (index%2 == 0) {
@@ -132,7 +177,7 @@
             }
         }
         this.options = $.extend(defaultOptions, options);
-        this.statusOptions = {type: 'normal'};
+        this.initStatus();
         this.initialize(options);
     };
 
@@ -140,8 +185,8 @@
         var el,
             eltype,
             El,
-            result;
-        _this = this;
+            result,
+            _this = this;
         this.rowsList = [];
 
         function getKey(index) {
@@ -157,6 +202,7 @@
         }
 
         function setOrderByEvent(target, locX) {
+            // delegate events to orderby element
             var options = _this.options;
             target.on('click', 'i', function(e) {
                 var type;
@@ -166,9 +212,9 @@
                     type = 'desc';
                 }
                 var name = getKey(locX);
-                _this.statusOptions = {
-                    type: 'orderBy',
-                    key: name
+                _this.statusOptions.orderBy = {
+                    key: name,
+                    type: type
                 };
                 if (options.source && $.type(options.source) == 'function') {
                     _this.toggleLoad();
@@ -195,9 +241,13 @@
             if (el instanceof jQuery) {  
                 // el is instance of jQuery 
                 El = el;
-            } else if (eltype == 'string') { 
-                // default is id.
-                if(!(El = $('#' + el)).length) return Error.sendReferenceError('该dom对象不存在,请传入id');
+            } else if (eltype == 'string') {
+                if (/#\w/.test(el) || /\.\w/.test(el)) {
+                    if(!(El = $(el)).length) return Error.sendReferenceError('the dom object is not exist');
+                } else {
+                    // default is id.
+                    if(!(El = $('#' + el)).length) return Error.sendReferenceError('the dom object is not exist,please give id');
+                }
             } else if(eltype == 'function') {
                 // Dynamic afferent the el
                 result = el.call(null);
@@ -206,7 +256,7 @@
                 } else if (result && $.type(result) == 'string') {
                     El = $(result);
                 } else {
-                    return new Error.sendTypeError('方法el返回的格式不正确');
+                    return new Error.sendTypeError('when el is function, the format of return result is wrong ');
                 }
             }
             var ths = El.find('table thead th');
@@ -245,9 +295,70 @@
                 }
             })
         }
+
+        this.initState();
+        this.initMultiSelect();
         this.setSkin();
         this.render();
     }
+
+    // initalize statusOptions
+    Table.prototype.initStatus = function() {
+        // this object used to be the third parms of options.source when options.source is function
+        // we can deal with different situations in options.source by it
+        this.statusOptions = {
+            // when  call refresh method of Table's instance when 
+            refresh: {},
+            // key  the orderby column's name
+            // type  asc | desc  
+            orderBy: {}
+        };        
+    }
+
+    Table.prototype.initState = function() {
+        this.state = {
+            selectAll: false
+        }
+    }
+
+    Table.prototype.setState = function(o) {
+        this.state = $.extend(this.state, o);
+        this.renderState();
+    }
+
+    Table.prototype.initMultiSelect = function() {
+        var _this = this;
+        if (this.options.multiselect) {
+            this.options.columnNameList.unshift(function(data, state) {
+                return '<input class="rowSelect" type="checkbox"  />';
+            });
+            this.options.events['input.rowSelect click'] = 'rowSelect';
+            this.options.eventsHandler.rowSelect = function(e, row) {
+                row.setState(!row.state.select);
+            }
+            var selectAllTarget = this.El.find('thead #selectAll');
+            selectAllTarget.click(function() {
+                var allSelect = false;
+                $.each(_this.rowsList, function(i, row) {
+                    if (row.state.select) {
+                        allSelect = true;
+                    } else {
+                        allSelect = false;
+                        return false;
+                    }
+                })
+                if (allSelect) {
+                    _this.unselectAll();
+                    _this.setState({selectAll: false});
+                } else {
+                    _this.selectAll();
+                    _this.setState({selectAll: true});
+                }
+            })
+        }
+    }
+
+    Table.prototype.clearStatus = Table.prototype.initStatus;
 
     Table.prototype.render = function() {
         var source = this.options.source,
@@ -257,15 +368,17 @@
         if (type == 'array' && source.length) {
             this.currentPage = 1;
             if (options.perNums && options.paginate) {
-                var totalPage = Math.ceil(source.length/options.perNums),
+                var totalPage = this.countPageNums(),
                     currentPage = this.currentPage;
-                _this.createPaginate({totalPage: totalPage, currentPage: currentPage});
+                if (!_this.paginate && options.paginate) {
+                    _this.createPaginate({totalPage: totalPage, currentPage: currentPage});
+                }
             }
             this._render(this.getCurPageData(this.currentPage, source));
         } else if(type == 'function') {
             _this.toggleLoad();
             source.call(this, {currentPage: 1}, function(opt) {
-                if (options.paginate) {
+                if (options.paginate && !_this.paginate) {
                     _this.createPaginate({totalPage: opt.totalPage, currentPage: _this.currentPage});
                 }
                 _this.switchPage(_this.currentPage, opt.totalPage, opt.datas, true);
@@ -274,33 +387,35 @@
         }
     }
 
-    // 显示某一页的表格数据
+    /**
+     * render one page
+     * @parms {Array} render datas.
+     */
     Table.prototype._render = function(datas) {
         var _this = this,
             rowsList = _this.rowsList,
             rowsListLength = rowsList.length,
             datasLength;
-        this.datas = datas;
 
-        if ($.type(datas) != 'array') throw new Error.sendTypeError('数据类型必须为数组');
+        if ($.type(datas) != 'array') throw new Error.sendTypeError('the type of data must be array');
 
         datasLength = datas.length;
 
         if (rowsListLength > datasLength) {
             for (var i=datasLength, l=rowsListLength-1; l >= i; l--) {
-                rowsList[l].status = false;
-                rowsList[l].El.hide();
+                _this.deleteRow(rowsList[l]);
             }
         }
         
         $.each(datas, function(i, rowData){
             if (rowsList[i] instanceof TableRow) {
+                rowsList[i].setState(false);
                 rowsList[i].refresh(rowData);
-                if (!rowsList[i].status) {
-                    rowsList[i].El.show();
-                }
             } else {
                 var tableRow = _this.createRow(i, rowData);
+                tableRow.on('destroy', function() {
+                    _this.destroyRow(tableRow);
+                })
                 rowsList.push(tableRow);
                 _this.El.find('tbody').append(tableRow.El);
             }
@@ -310,6 +425,16 @@
         this.setClass();
     }
 
+    Table.prototype.renderState = function(flag) {
+        var selectAllTarget = this.El.find('thead #selectAll');
+        if (this.state.selectAll) {
+            selectAllTarget.attr('checked', true);
+        } else {
+            selectAllTarget.attr('checked', false);
+        }
+    }
+
+    // instance pagination to be Table's pagination
     Table.prototype.createPaginate = function(settings) {
         if (!Paginate) return;
         var paginateBtns = this.options.paginateBtns;
@@ -329,12 +454,13 @@
         }); 
     }
 
+    // set skin by add class for El
     Table.prototype.setSkin = function() {
         if (!this.options.skin) return;
         this.El.addClass(this.options.skin);
     }
 
-    Table.prototype.getCurPageData = function(currentPage, datas, isFn /* source获取数据方式 */) {
+    Table.prototype.getCurPageData = function(currentPage, datas, isFn /* options.source type */) {
         var perNums = this.options.perNums;
         if (isFn) return datas.slice(0, perNums);
         return datas.slice((currentPage-1)*perNums,
@@ -365,23 +491,35 @@
         }
     }
 
+    // switch page 
     Table.prototype.switchPage = function(currentPage, totalPage, datas, isFn) {
         var currentPage = currentPage || 1,
-            totalPage = totalPage || Math.ceil(this.options.source.length / this.options.perNums),
+            totalPage = totalPage || this.countPageNums(),
             datas = datas || this.options.source,
             perNums = this.options.perNums;
         if (currentPage > totalPage) {
             currentPage = totalPage;
         }
         this.refreshCurrentPageTable(this.getCurPageData(currentPage, datas, isFn), currentPage);
-        this.refreshPaginate(currentPage, totalPage);
+        this.paginate && this.refreshPaginate(currentPage, totalPage);
+        this.setState({selectAll: false});
     }
 
+    /**
+     * refresh currentpage's table
+     * @params {Array} the datas that currentpage's table need
+     * @params {Number} currentpage
+     */ 
     Table.prototype.refreshCurrentPageTable = function(datas, currentPage) {
         this.currentPage = currentPage;
         this.refreshWhichPage(datas);
     }
 
+    /**
+     * refresh pagination
+     * @params {Number} the currentpage of pagination
+     * @params {Number} the totalpage of pagination
+     */ 
     Table.prototype.refreshPaginate = function(currentPage, totalPage) {
         this.paginate.options.currentPage = currentPage;
         this.paginate.options.totalPage = totalPage;
@@ -400,11 +538,13 @@
         $.each(rowsList, function(index, row){
             if (row.index != index) {
                 row.setIndex(index);
+                row.setState(false);
                 row.refresh();
             }
         })
     }
 
+    // create row object
     Table.prototype.createRow = function(index, rowdata) {
         var _this = this,
             columnNameList = _this.options.columnNameList,
@@ -417,7 +557,8 @@
                 index: index
             }, _this);
     }
-        
+    
+    // delegate events 
     Table.prototype.setEvents = function() {
         var _this = this,
             rowsList = _this.rowsList,
@@ -432,6 +573,7 @@
         }
     }
 
+    // set each row's class
     Table.prototype.setClass = function() {
         var _this = this,
             rowsList = _this.rowsList;
@@ -442,27 +584,84 @@
         }
     }
 
+    // destroy row
     Table.prototype.destroyRow = function(row) {
+        var rowsList = this.rowsList,
+            options = this.options;
+            currentPage = this.currentPage || 1;
+        this.deleteRow(row);
+        if (options.source && $.type(options.source) == 'array') {
+            options.source.splice(row.index ,1);
+        }
+        this._switchPage(currentPage, 2, this.statusOptions);
+    } 
+
+    // delete row
+    Table.prototype.deleteRow = function(row) {
         var rowsList = this.rowsList, 
             _this = this,
             options = this.options;
             currentPage = this.currentPage || 1;
+        row._destroy();
         rowsList.splice(row.index, 1);
-        if (options.source && $.type(options.source) == 'array') {
-            options.source.splice(row.index ,1);
-        }
-        _this._switchPage(currentPage, 2, _this.statusOptions);
-    }
+    }    
 
+    // destroy table
     Table.prototype.destroy = function() {
         var _this = this;
         this.El && this.El.remove();
         var rowsList = this.options.rowsList;
         $.each(rowsList, function(index, row){
-            row.destroy();
+            _this.destroyRow(row);
         }); 
     }
 
+    /**
+     * refresh table
+     * @params {Array | Object}  
+     */
+    Table.prototype.refresh = function(opts) {
+        var opts = opts || {}, 
+            type = $.type(opts),
+            originalSourceType = $.type(this.options.source);
+        if (type == 'array') {
+            // the opts's type is Array, use opts to be optins.source, refresh the table's firstpage
+            this.options.source = opts;
+            this.switchPage(1, this.countPageNums());            
+        } else if (originalSourceType == 'function' && type == 'object') {
+            // set statusOptions.refresh
+            this.statusOptions.refresh = opts;
+            this.render();
+        }
+    }
+
+    Table.prototype.selectAll = function() {
+        $.each(this.rowsList, function(index, row) {
+            row.setState(true);
+        })
+    }
+
+    Table.prototype.unselectAll = function() {
+        $.each(this.rowsList, function(index, row) {
+            row.setState(false);
+        })
+    }
+
+    // count the totalpages
+    Table.prototype.countPageNums = function() {
+        // config paginate false, default return 1
+        if (!this.options.paginate)
+            return 1;
+        var source = this.options.source;
+        if (source && $.type(source) == 'array') {
+            return Math.ceil(this.options.source.length / this.options.perNums);
+        } else if (source && $.type(source) == 'function') {
+            return this.paginate.options.totalPage || 1;
+        }
+    }
+
+    // when switch page 
+    // if sync access data or large amount of time to calculating data, show load dialog
     Table.prototype.toggleLoad = function() {
         if (!this.loadEl) {
             this.loadEl = $('<div class="k-load-div"><span class="k-load-wrap"></span></div>');
@@ -480,6 +679,7 @@
         }
     }
 
+    // delete row, if sync access data, show the load dialog
     Table.prototype.bottomToggleLoad = function() {
         if (!this.loadBotEl) {
             this.loadBotEl = $('<div class="k-loadbot-div"><span class="k-load-wrap"></span></div>');
@@ -493,6 +693,8 @@
         }
     }
 
+    // Descending  order 
+    // only used for options.source is Array
     Table.prototype.orderByDesc = function(name) {
         var datas = this.options.source;
         if (datas.length) {
@@ -507,6 +709,8 @@
         }
     }
 
+    // Ascending  order 
+    // only used for options.source is Array
     Table.prototype.orderByAsc = function(name) {
         var datas = this.options.source;
         if (datas.length) {
@@ -522,6 +726,7 @@
         }
     }
 
+    // make table to be Subscriber
     Observe.make(Table.prototype);    
 
     window.Table = Table;
