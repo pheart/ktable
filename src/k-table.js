@@ -54,6 +54,7 @@
             content = '',
             El;
         $.each(columnNameList, function(i, name) {
+            var type = $.type(name);
             if (name == 'index') {
                 var currentPage = _this.parent.currentPage,
                     perNums = _this.parent.options.perNums;
@@ -63,11 +64,11 @@
                     var index = (currentPage-1)*perNums + _this.index + 1;
                 }
                 content += _this.createColItem(index);
-            } else if ($.type(name) == 'string') {
+            } else if (type == 'string') {
                 content += _this.createColItem(data[name]);
-            } else if ($.type(name) == 'function') {
+            } else if (type == 'function') {
                 content += _this.createColItem(name.call(null, data));
-            } else if ($.type(name) == 'object') {
+            } else if (type == 'object') {
                 content += _this.createColItem(data[name.name], name['className']);
             }
         });
