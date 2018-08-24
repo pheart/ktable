@@ -73,7 +73,7 @@ multiselect|Boolean|是否可选|如果为true,表格左侧有一栏目复选框
         }
     });
 
-# 
+
 
     var table = new Table({
         thList: []
